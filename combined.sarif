@@ -1088,7 +1088,7 @@
             }
           ],
           "message": {
-            "text": "The integrity attribute is missing on a script or link tag served by an external server. The integrity tag prevents an attacker who have gained access to this server from injecting a malicious content."
+            "text": "The integrity attribute is missin on a script or link tag served by an external server. The integrity tag prevents an attacker who have gained access to this server from injecting a malicious content."
           },
           "ruleId": "90003",
           "webRequest": {
