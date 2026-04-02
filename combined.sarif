@@ -7068,7 +7068,7 @@
       "taxonomies": [
         {
           "downloadUri": "https://cwe.mitre.org/data/xml/cwec_v4.8.xml.zip",
-          "guid": "b000a760-3e52-3565-a35c-f61369da53b7",
+          "guid": "a1b2c3d4-e5f6-4789-9abc-def012345678",
           "informationUri": "https://cwe.mitre.org/data/published/cwe_v4.8.pdf",
           "isComprehensive": true,
           "language": "en",
