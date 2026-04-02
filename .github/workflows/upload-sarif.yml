@@ -15,7 +15,50 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Upload SARIF
+      - name: Fix SARIF URI (ZAP + Wapiti + Nuclei)
+        run: |
+          python3 -c '
+          import json
+          import re
+
+          def normalize_uri(uri):
+              if not isinstance(uri, str):
+                  return uri
+              # Xóa http/https + domain, chỉ giữ đường dẫn tương đối
+              if uri.startswith(("http://", "https://")):
+                  path = re.sub(r"^https?://[^/]+", "", uri)
+                  return path if path else "/"
+              return uri
+
+          # Đọc file SARIF
+          with open("combined.sarif", "r", encoding="utf-8") as f:
+              sarif = json.load(f)
+
+          # Fix tất cả URI trong file
+          def fix_locations(obj):
+              if isinstance(obj, dict):
+                  for key, value in list(obj.items()):
+                      if key == "uri":
+                          obj[key] = normalize_uri(value)
+                      elif key == "uriBaseId":
+                          obj[key] = "%SRCROOT%"
+                      else:
+                          fix_locations(value)
+              elif isinstance(obj, list):
+                  for i, item in enumerate(obj):
+                      fix_locations(item)
+              return obj
+
+          fixed = fix_locations(sarif)
+
+          # Ghi ra file mới
+          with open("combined-fixed.sarif", "w", encoding="utf-8") as f:
+              json.dump(fixed, f, indent=2)
+          print("✅ Đã fix xong URI http → relative path")
+          '
+
+      - name: Upload SARIF (file đã fix)
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: combined.sarif
+          sarif_file: combined-fixed.sarif
+          category: combined-dast-zap-wapiti-nuclei   # tên dễ nhận biết
