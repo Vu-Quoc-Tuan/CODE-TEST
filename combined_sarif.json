@@ -1088,7 +1088,7 @@
             }
           ],
           "message": {
-            "text": "The integrity attribute is missin on a script or link tag served by an external server. The integrity tag prevents an attacker who have gained access to this server from injecting a malicious content."
+            "text": "The integrity attribute is missing on a script or link tag served by an external server. The integrity tag prevents an attacker who have gained access to this server from injecting a malicious content."
           },
           "ruleId": "90003",
           "webRequest": {
@@ -7068,7 +7068,7 @@
       "taxonomies": [
         {
           "downloadUri": "https://cwe.mitre.org/data/xml/cwec_v4.8.xml.zip",
-          "guid": "a1b2c3d4-e5f6-4789-9abc-def012345678",
+          "guid": "b000a760-3e52-3565-a35c-f61369da53b7",
           "informationUri": "https://cwe.mitre.org/data/published/cwe_v4.8.pdf",
           "isComprehensive": true,
           "language": "en",
@@ -7270,7 +7270,7 @@
         },
         {
           "downloadUri": "https://owasp.org/www-project-web-security-testing-guide/stable/",
-          "guid": "a1b2c3d4-e5f6-4789-9abc-def012345678",
+          "guid": "d049aa48-a1fc-4dfc-bbf7-6b73a52807f7",
           "informationUri": "https://owasp.org/www-project-web-security-testing-guide/",
           "isComprehensive": false,
           "language": "en",
