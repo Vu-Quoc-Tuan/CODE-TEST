@@ -28,7 +28,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"target_url\": \"$TARGET_AGENT_URL\", \"agent_config_name\": \"agent_config\"}")
 
-          echo "===== RESPONSE ====="
+          echo "===== RESPONSE ==="
           echo "$RESPONSE"
           echo "===================="
           
