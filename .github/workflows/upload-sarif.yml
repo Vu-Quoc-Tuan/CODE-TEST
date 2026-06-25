@@ -3,7 +3,10 @@ name: CI/CD Evaluation Gate
 on:
   push:
     branches:
-      - main  # Chạy khi push code lên nhánh main
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   run-evaluation:
@@ -12,11 +15,11 @@ jobs:
       - name: Gửi yêu cầu Evaluation
         run: |
           # 1. Đường link Ngrok trỏ về server eval của bạn
-          EVAL_SERVER="https://7e7b-103-9-211-2.ngrok-free.app"
+          EVAL_SERVER="https://f193-103-9-211-2.ngrok-free.app"
           
           # 2. URL của Agent bạn đang dev/staging (để server eval biết mà gọi đến test)
           # Lưu ý: Sửa lại địa chỉ thực tế của Agent staging của bạn ở đây
-          TARGET_AGENT_URL="http://<ip-agent-cua-ban>:5009"
+          TARGET_AGENT_URL="http://[IP_ADDRESS]"
           
           echo "🚀 Đang kích hoạt LLMOps Eval..."
           
@@ -24,6 +27,10 @@ jobs:
           RESPONSE=$(curl -s -X POST "$EVAL_SERVER/api/eval-runs" \
             -H "Content-Type: application/json" \
             -d "{\"target_url\": \"$TARGET_AGENT_URL\", \"agent_config_name\": \"agent_config\"}")
+
+          echo "===== RESPONSE ==="
+          echo "$RESPONSE"
+          echo "===================="
           
           RUN_ID=$(echo "$RESPONSE" | jq -r '.eval_run_id')
           
