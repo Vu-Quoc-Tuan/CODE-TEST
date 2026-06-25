@@ -1,64 +1,63 @@
-name: Upload SARIF to Code Scanning
+name: CI/CD Evaluation Gate
 
 on:
   push:
-    paths:
-      - '**.sarif'
+    branches:
+      - main  # Chạy khi push code lên nhánh main
 
 jobs:
-  upload:
+  run-evaluation:
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Fix SARIF URI (ZAP + Wapiti + Nuclei)
+      - name: Gửi yêu cầu Evaluation
         run: |
-          python3 -c '
-          import json
-          import re
+          # 1. Đường link Ngrok trỏ về server eval của bạn
+          EVAL_SERVER="https://7e7b-103-9-211-2.ngrok-free.app"
+          
+          # 2. URL của Agent bạn đang dev/staging (để server eval biết mà gọi đến test)
+          # Lưu ý: Sửa lại địa chỉ thực tế của Agent staging của bạn ở đây
+          TARGET_AGENT_URL="http://<ip-agent-cua-ban>:5009"
+          
+          echo "🚀 Đang kích hoạt LLMOps Eval..."
+          
+          # Gọi API tạo lượt chạy
+          RESPONSE=$(curl -s -X POST "$EVAL_SERVER/api/eval-runs" \
+            -H "Content-Type: application/json" \
+            -d "{\"target_url\": \"$TARGET_AGENT_URL\", \"agent_config_name\": \"agent_config\"}")
+          
+          RUN_ID=$(echo "$RESPONSE" | jq -r '.eval_run_id')
+          
+          if [ "$RUN_ID" = "null" ] || [ -z "$RUN_ID" ]; then
+            echo "❌ Lỗi kích hoạt. Server trả về: $RESPONSE"
+            exit 1
+          fi
+          
+          echo "✅ Đã tạo Run ID: $RUN_ID"
+          echo "⏳ Chờ kết quả đánh giá (Polling)..."
 
-          def normalize_uri(uri):
-              if not isinstance(uri, str):
-                  return uri
-              # Xóa http/https + domain, chỉ giữ đường dẫn tương đối
-              if uri.startswith(("http://", "https://")):
-                  path = re.sub(r"^https?://[^/]+", "", uri)
-                  return path if path else "/"
-              return uri
-
-          # Đọc file SARIF
-          with open("combined.sarif", "r", encoding="utf-8") as f:
-              sarif = json.load(f)
-
-          # Fix tất cả URI trong file
-          def fix_locations(obj):
-              if isinstance(obj, dict):
-                  for key, value in list(obj.items()):
-                      if key == "uri":
-                          obj[key] = normalize_uri(value)
-                      elif key == "uriBaseId":
-                          obj[key] = "%SRCROOT%"
-                      else:
-                          fix_locations(value)
-              elif isinstance(obj, list):
-                  for i, item in enumerate(obj):
-                      fix_locations(item)
-              return obj
-
-          fixed = fix_locations(sarif)
-
-          # Ghi ra file mới
-          with open("combined-fixed.sarif", "w", encoding="utf-8") as f:
-              json.dump(fixed, f, indent=2)
-          print("✅ Đã fix xong URI http → relative path")
-          '
-
-      - name: Upload SARIF (file đã fix)
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: combined-fixed.sarif
-          category: combined-dast-zap-wapiti-nuclei   # tên dễ nhận biết
+          # Vòng lặp chờ kết quả (15 giây check 1 lần)
+          while true; do
+            STATUS_RESP=$(curl -s "$EVAL_SERVER/api/eval-runs/$RUN_ID")
+            STATUS=$(echo "$STATUS_RESP" | jq -r '.status')
+            
+            if [ "$STATUS" = "success" ]; then
+              GATE_STATUS=$(echo "$STATUS_RESP" | jq -r '.result.gate.gate_status')
+              OVERALL_SCORE=$(echo "$STATUS_RESP" | jq -r '.result.summary.overall_score')
+              
+              echo "📊 Điểm số hệ thống: $OVERALL_SCORE"
+              echo "🚦 CI/CD Gate: $GATE_STATUS"
+              
+              if [ "$GATE_STATUS" = "PASS" ]; then
+                echo "🟢 ĐẠT CHUẨN! Cho phép Deploy."
+                exit 0
+              else
+                echo "❌ TRƯỢT GATE! Chặn Deploy."
+                exit 1
+              fi
+            elif [ "$STATUS" = "failed" ]; then
+              echo "❌ Hệ thống eval báo lỗi hệ thống!"
+              exit 1
+            fi
+            
+            sleep 15
+          done
