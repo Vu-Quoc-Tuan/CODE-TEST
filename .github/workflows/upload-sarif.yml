@@ -15,11 +15,11 @@ jobs:
       - name: Gửi yêu cầu Evaluation
         run: |
           # 1. Đường link Ngrok trỏ về server eval của bạn
-          EVAL_SERVER="https://8106-103-9-211-2.ngrok-free.app"
+          EVAL_SERVER="https://f193-103-9-211-2.ngrok-free.app"
           
           # 2. URL của Agent bạn đang dev/staging (để server eval biết mà gọi đến test)
           # Lưu ý: Sửa lại địa chỉ thực tế của Agent staging của bạn ở đây
-          TARGET_AGENT_URL="http://<ip-agent-cua-ban>:5009"
+          TARGET_AGENT_URL="http://[IP_ADDRESS]"
           
           echo "🚀 Đang kích hoạt LLMOps Eval..."
           
